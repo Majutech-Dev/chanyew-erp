@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Runtime data: db.json, uploads and automatic backups (never commit customer data)
+data/
+
+# Local settings and secrets (.env.example is the committed template)
+.env
+.env.*
+!.env.example
+config/settings.json
+
+# Backup copies of the app
+*-backup-*/
+
+# Logs and OS / editor files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Claude Code local preview config
+.claude/
+
+# Confidential source documents (add each one by name in step 1)
+# The client documents (proposal, estimate, grant letter, meeting notes, requirements) live one folder up and are never copied here.
+*.pdf
+*.docx

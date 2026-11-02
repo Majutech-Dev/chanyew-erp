@@ -1,0 +1,5 @@
+# Keep LF line endings in the repo so the Linux server and Windows PCs agree
+* text=auto eol=lf
+*.bat text eol=crlf
+*.jpg binary
+*.png binary
