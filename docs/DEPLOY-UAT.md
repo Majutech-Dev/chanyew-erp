@@ -148,3 +148,22 @@ sudo -u chanyew git -C /opt/chanyew-erp pull --ff-only && sudo systemctl restart
 ```bash
 sudo systemctl stop chanyew-erp && sudo -u chanyew bash -c 'cd /opt/chanyew-erp && npm run seed' && sudo systemctl start chanyew-erp
 ```
+
+## 11. Load the client's data (Access export)
+
+The export file holds real customer data: copy it straight to the server, **never through git**, and keep the site password on (step 7).
+
+On your PC (PowerShell), with the key in `%USERPROFILE%\.ssh`:
+
+```bash
+scp -i "$env:USERPROFILE\.ssh\CYL-UAT.pem" "<path>\kl-access-export-2025-10-01.json" ubuntu@3.1.198.0:/tmp/kl.json
+```
+
+On the server – replaces all data with the imported branch only (current data is backed up first) and deletes the upload:
+
+```bash
+sudo -u chanyew git -C /opt/chanyew-erp pull --ff-only && sudo chmod 644 /tmp/kl.json && sudo systemctl stop chanyew-erp && sudo -u chanyew node /opt/chanyew-erp/tools/import-access.js /tmp/kl.json MY && sudo systemctl start chanyew-erp && sudo rm /tmp/kl.json
+```
+
+Add `--keep-demo` after `MY` to keep the invented Singapore and Bangkok demo records.
+

@@ -1,7 +1,8 @@
 'use strict';
-// Loads a legacy Access export (tools/access-export.ps1) into the local demo data for one branch.
-//   node tools/import-access.js <access-export.json> [branchId=MY]
-// Starts from the normal demo data, removes that branch's invented records and adds the imported ones.
+// Loads a legacy Access export (tools/access-export.ps1) into the data folder for one branch.
+//   node tools/import-access.js <access-export.json> [branchId=MY] [--keep-demo]
+// Starts from the normal set-up (demo users, branches, glossary, settings) with no invented business records, then
+// adds the imported ones. --keep-demo keeps the invented records of the other branches.
 // Records are written directly (not through the actions) because legacy data breaks some of today's rules
 // (e.g. repeated RO numbers); every imported record says so in its History. Stop the server first.
 // The result holds real client data: it stays in data/ (not in git) and must not go to UAT without a site password.
@@ -11,8 +12,9 @@ const { buildSeed } = require('../server/seed');
 const { newId, nextSeq, pad, round2, addDays, PAYMENT_TERMS } = require('../server/workflow');
 const { DB_FILE, DATA_DIR, saveDb } = require('../server/server');
 
-const [, , file, branchId = 'MY'] = process.argv;
-if (!file) { console.error('Usage: node tools/import-access.js <access-export.json> [branchId]'); process.exit(1); }
+const args = process.argv.slice(2), keepDemo = args.includes('--keep-demo');
+const [file, branchId = 'MY'] = args.filter(a => a !== '--keep-demo');
+if (!file) { console.error('Usage: node tools/import-access.js <access-export.json> [branchId] [--keep-demo]'); process.exit(1); }
 const src = JSON.parse(fs.readFileSync(file, 'utf8').replace(/^﻿/, ''));
 const clean = s => (s == null ? '' : String(s).replace(/ /g, ' ').replace(/\s+/g, ' ').trim());
 const byId = list => new Map(list.map(r => [r.ID, r]));
@@ -21,14 +23,15 @@ const db = buildSeed();
 const b = db.branches.find(x => x.id === branchId);
 if (!b) throw new Error(`Unknown branch ${branchId}`);
 
-// 1. drop the branch's invented demo records (customers only when no other branch uses them)
-const keep = r => r.branchId !== branchId;
+// 1. drop invented demo records: all of them, or only this branch's with --keep-demo (customers only when unused)
+const keep = r => keepDemo && r.branchId !== branchId;
 db.salesOrders = db.salesOrders.filter(keep); db.workOrders = db.workOrders.filter(keep);
 db.invoices = db.invoices.filter(keep); db.groupInvoices = db.groupInvoices.filter(keep);
 db.leaves = db.leaves.filter(keep); db.outbox = (db.outbox || []).filter(keep);
-const demoStaff = db.staff.filter(s => s.branchId === branchId && !db.users.some(u => u.name === s.name));
+const demoStaff = db.staff.filter(s => !keepDemo || (s.branchId === branchId && !db.users.some(u => u.name === s.name)));
 db.staff = db.staff.filter(s => !demoStaff.includes(s));
-db.customers = db.customers.filter(c => c.homeBranchId !== branchId || db.salesOrders.some(s => s.customerId === c.id));
+db.customers = db.customers.filter(c => keepDemo && (c.homeBranchId !== branchId || db.salesOrders.some(s => s.customerId === c.id)));
+if (!keepDemo) db.audit = [];
 
 const IMPORT = 'Import (Access)';
 const stamp = d => `${d}T02:00:00.000Z`;   // 10:00 Malaysia / Singapore time
