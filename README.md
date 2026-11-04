@@ -28,6 +28,7 @@ Newest first. Every change request or reported issue gets a row. Status ✔ mean
 
 | # | Date | Request / issue | Cause | Change | Version | Status |
 |---|---|---|---|---|---|---|
+| 13 | 4 Nov 2026 | Load the client's existing (Access) data from 1 Oct 2025 as demo data | Demo used invented records only | `tools/access-export.ps1` exports the legacy Access CRM (read-only) and `tools/import-access.js` loads it into the **local** data: Kuala Lumpur branch from 1 Oct 2025 (250 customers, 1,682 sales orders, 4,489 work orders, 1,242 invoices, 18 technicians), replacing the invented KL demo records. Access has no payment records, so imported invoices are recorded as settled outside the system. Real client data – local only, not in git, not on UAT | 0.7.1 | ✔ |
 | 12 | 4 Nov 2026 | Printed IV, WO and SO should follow Chan Yew's own formats (specimen PDFs supplied 4 Nov 2026) | Printouts used generic placeholder layouts | SO, WO and IV rebuilt on Chan Yew's formats: logo from the specimens, customer-particulars grid, numbered order details (item type – #RO – item – services), totals with currency sign, item status box, SO terms and conditions, company footer, and the invoice's tear-off collection receipt. WO keeps the bilingual repair services and instructions in its order-details area. Group invoice printout moved to the same family. Singapore branch details (reg. no., address, website, SO terms) set from the specimens; new Website field in Set-up → Branches. Demo data reseeded locally | 0.7.0 | ✔ |
 | 11 | 2 Nov 2026 | Remove the password prompt on the UAT site | nginx basic-auth was added in front of the UAT site because the app has no sign-in | Basic-auth removed from nginx on the UAT server; DEPLOY-UAT.md records how to remove and re-add it, and that only demo data may be loaded | 0.6.0 | ✔ |
 | 10 | 2 Nov 2026 | Set up the UAT server on AWS | No deployment guide yet | `docs/DEPLOY-UAT.md`: EC2 (Singapore, 3.1.198.0), deploy key, systemd service, nginx with a site password, Let's Encrypt HTTPS, update and reset commands for chanyew.majutech.com.sg | 0.6.0 | ✔ |
@@ -69,6 +70,7 @@ public/js/screens.js record screens (customers, SO, WO, invoices, staff, leave, 
 public/js/app.js     dashboard, settings, print page
 public/js/print-templates.js  SO / WO / IV / GIV printouts in Chan Yew's own formats
 public/js/guide.js   test guide page for interim user testing (#/guide)
+tools/               access-export.ps1 + import-access.js: load the legacy Access CRM into local data
 data/                db.json, backups and uploads (created at run time, not in git)
 tests/               acceptance tests
 ```
