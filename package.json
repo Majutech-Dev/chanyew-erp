@@ -1,6 +1,6 @@
 {
   "name": "chanyew-erp",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "private": true,
   "description": "Chan Yew Leathers – repair job, work order, invoicing, multi-branch and HR system (local demo mode)",
   "scripts": {
@@ -12,3 +12,4 @@
     "node": ">=22"
   }
 }
+

@@ -617,10 +617,10 @@ erpScreen({
   main: {
     canEdit: () => isSuper() ? '' : 'Only a Super Admin can change branch settings',
     lockNote: () => 'Tax and address changes apply to new sales orders and invoices only; issued documents keep their original values.',
-    render: (r, ed) => section('Branch', sysF('Code', 'id') + sysF('Country', 'country') + sysF('Currency', 'cur') + fld('req', 'Branch name', inp('name', r.name, 'text', !ed)) + fld('opt', 'Phone', inp('phone', r.phone, 'text', !ed)))
+    render: (r, ed) => section('Branch', sysF('Code', 'id') + sysF('Country', 'country') + sysF('Currency', 'cur') + fld('req', 'Branch name', inp('name', r.name, 'text', !ed)) + fld('opt', 'Phone', inp('phone', r.phone, 'text', !ed)) + fld('opt', 'Website (printed)', inp('website', r.website || '', 'text', !ed)))
       + section('Legal & tax', fld('opt', 'Legal entity name', inp('legalName', r.legalName, 'text', !ed), 'span2') + fld('opt', 'Company reg. no.', inp('regNo', r.regNo, 'text', !ed)) + fld('opt', 'Tax reg. no.', inp('taxRegNo', r.taxRegNo, 'text', !ed))
         + fld('req', 'Tax label', inp('taxLabel', r.taxLabel, 'text', !ed)) + fld('req', 'Tax rate %', inp('taxRate', r.taxRate, 'number', !ed, 'step="0.01" min="0" max="30"')) + fld('opt', 'Address', inp('address', r.address, 'text', !ed), 'span2'))
-      + section('Invoice', fld('opt', 'Bank / payment details', txt('bankInfo', r.bankInfo, !ed), 'full') + fld('opt', 'Terms & conditions', txt('invoiceTerms', r.invoiceTerms, !ed, 3), 'full')),
+      + section('Invoice', fld('opt', 'Bank / payment details', txt('bankInfo', r.bankInfo, !ed), 'full') + fld('opt', 'Terms & conditions (printed on the sales order)', txt('invoiceTerms', r.invoiceTerms, !ed, 6), 'full')),
     compute: (form, r) => ({ errors: [], sys: { id: r.id, country: r.country, cur: r.currency } }),
     save: (fd, r) => api('branch.save', { ...fd, id: r.id }),
   },

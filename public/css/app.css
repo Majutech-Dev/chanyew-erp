@@ -232,3 +232,39 @@ a.kpi:hover { text-decoration: none; border-color: var(--primary); }
 .guide .tc-result select { width: 150px; } .guide .tc-result input { flex: 1; min-width: 240px; }
 .guide .form-section .body { display: block; }
 @media print { .guide .erp-toolbar, .guide .alert, .topbar, .demo-banner { display: none !important; } .guide .tcase { break-inside: avoid; } }
+/* Chan Yew document formats (SO / WO / IV specimens supplied 4 Nov 2026): black on white, Arial */
+.reference.doc.page { padding: 7mm 6mm; min-height: 297mm; font: 11px/1.35 Arial, Helvetica, sans-serif; color: #111; display: flex; flex-direction: column; }
+.reference h2 { font: bold 16px Arial, sans-serif; text-align: right; margin: 0 4mm 4mm; }
+.reference h3 { font: bold 15px Arial, sans-serif; margin: 7mm 2mm 2mm; }
+.ref-header { display: grid; grid-template-columns: 24mm 1fr; gap: 3mm; align-items: start; }
+.ref-logo { background: #f7f7f7; padding: 2mm 1.5mm; } .ref-logo img { width: 100%; display: block; }
+.ref-header table { width: 100%; border-collapse: collapse; font-size: 11px; }
+.ref-header td { border-top: 1px solid #111; border-bottom: 1px solid #111; padding: 1.6mm 2mm; vertical-align: top; }
+.ref-header td + td { border-left: 1px solid #111; } .ref-header td span { margin-left: 2mm; overflow-wrap: anywhere; }
+.ref-header tr:last-child td[colspan] { border-bottom: 1px solid #111; }
+.ref-wo-customer { margin-top: 4mm; border: 1px solid #111; } .ref-wo-customer td:first-child { width: 58%; }
+.ref-lines { width: 100%; border-collapse: collapse; border-top: 1px solid #111; border-bottom: 1px solid #111; }
+.ref-lines td { padding: 1.6mm 2mm; vertical-align: top; } .ref-lines td:first-child { width: 6mm; }
+.ref-lines td:last-child { width: 34mm; border-left: 1px solid #111; text-align: right; white-space: nowrap; } .ref-lines tr { break-inside: avoid; }
+.ref-iv .ref-fill td { height: 30mm; }
+.ref-total { display: flex; justify-content: flex-end; align-items: center; min-height: 6mm; }
+.ref-total span:first-child { padding: 1mm 3mm; } .ref-total span:last-child { width: 34mm; text-align: right; border-left: 1px solid #111; border-bottom: 1px solid #111; padding: 1mm 2mm; }
+.ref-status { border: 1px solid #111; margin: 6mm 1mm 3mm; min-height: 18mm; padding: 2mm 3mm; break-inside: avoid; }
+.ref-status h3 { margin: 0 0 2mm; } .ref-status p { margin: 1.5mm 0; white-space: pre-wrap; } .ref-so .ref-status { min-height: 45mm; }
+.ref-note { margin: 2mm; white-space: pre-wrap; }
+.ref-terms { font-size: 7.5px; line-height: 1.35; margin: 3mm 2mm; } .ref-terms p { white-space: pre-wrap; margin: 1.5mm 0 0; }
+.ref-footer { display: flex; border-top: 1px solid #111; border-bottom: 1px solid #111; margin-top: 3mm; font-size: 11px; break-inside: avoid; }
+.ref-footer > div { flex: 1; } .ref-footer b { display: block; padding: 1.5mm 2mm; }
+.ref-footer span { display: flex; border-top: 1px solid #111; } .ref-footer em { font-style: normal; padding: 1.5mm 2mm; width: 48mm; border-right: 1px solid #111; flex: none; } .ref-footer span { padding-right: 2mm; align-items: center; }
+.ref-footer strong { width: 40mm; border-left: 1px solid #111; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+.ref-so > .ref-footer, .ref-wo > .ref-footer { margin-top: auto; }
+.ref-work { flex: 1; min-height: 150mm; border-bottom: 1px solid #111; margin: 0 1mm; } .ref-work h3 { border-bottom: 1px solid #111; padding-bottom: 2mm; margin-left: 0; } .ref-work p { white-space: pre-wrap; margin: 2mm 0; }
+.ref-svc { border-collapse: collapse; margin: 3mm 0; } .ref-svc td { padding: 1mm 4mm 1mm 0; font-size: 12px; } .ref-svc td:first-child { font-size: 14px; }
+.ref-receipt { break-inside: avoid; margin-top: 2mm; }
+.ref-tear { border-bottom: 1.5px dashed #111; text-align: center; font-style: italic; font-size: 8px; padding: 1mm; margin-bottom: 3mm; }
+.ref-receipt h4 { text-decoration: underline; margin: 5mm 2mm; font-size: 11px; }
+.ref-sign { display: grid; grid-template-columns: 1.4fr 1fr; gap: 14mm 20mm; padding: 4mm 2mm 3mm; }
+.ref-sign span { display: flex; gap: 3mm; white-space: nowrap; align-items: flex-end; } .ref-sign i { flex: 1; border-bottom: 1px solid #111; font-style: normal; text-align: center; min-height: 4mm; }
+.reference .zh { font-family: Arial, 'Microsoft YaHei', 'PingFang SC', sans-serif; }
+@media print { .reference.doc.page { min-height: 284mm; padding: 6mm; break-after: page; } .ref-header { break-inside: avoid; } }
+.ref-page { text-align: right; font-style: italic; font-size: 8px; margin: 1mm 1mm 0; }

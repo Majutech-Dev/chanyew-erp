@@ -572,12 +572,12 @@ const actions = {
     needSuper(user, 'change branch settings');
     const b = find(db.branches, p.id, 'Branch');
     const f = { name: str(p.name), legalName: str(p.legalName), regNo: str(p.regNo), taxRegNo: str(p.taxRegNo), address: str(p.address),
-      phone: str(p.phone), taxLabel: str(p.taxLabel), taxRate: num(p.taxRate), bankInfo: str(p.bankInfo), invoiceTerms: str(p.invoiceTerms) };
+      phone: str(p.phone), website: str(p.website), taxLabel: str(p.taxLabel), taxRate: num(p.taxRate), bankInfo: str(p.bankInfo), invoiceTerms: str(p.invoiceTerms) };
     if (!f.name) fail('Branch name is required.');
     if (!f.taxLabel) fail('Tax label is required (e.g. GST, SST, VAT).');
     if (!(f.taxRate >= 0 && f.taxRate <= 30)) fail('Tax rate must be 0–30%.');
     const before = { ...b }; Object.assign(b, f);
-    const ch = changedFields(before, b, { name: 'Name', legalName: 'Legal name', regNo: 'Reg. no.', taxRegNo: 'Tax reg. no.', address: 'Address', phone: 'Phone', taxLabel: 'Tax label', taxRate: 'Tax rate', bankInfo: 'Bank details', invoiceTerms: 'Invoice terms' });
+    const ch = changedFields(before, b, { name: 'Name', legalName: 'Legal name', regNo: 'Reg. no.', taxRegNo: 'Tax reg. no.', address: 'Address', phone: 'Phone', website: 'Website', taxLabel: 'Tax label', taxRate: 'Tax rate', bankInfo: 'Bank details', invoiceTerms: 'Invoice terms' });
     if (ch.length) { hist(b, user, 'Edited: ' + ch.join(', ')); audit(db, user, 'Branch edited', b.id, ch.join(', ')); }
     return b;
   },

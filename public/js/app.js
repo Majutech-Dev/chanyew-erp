@@ -129,6 +129,7 @@ VIEWS.print = (el, type, ids) => {
       ${g.notes ? `<p>${esc(g.notes)}</p>` : ''}<div class="doc-terms"><b>Payment</b><br>Please quote ${esc(g.ref)} with your payment. ${esc(b.bankInfo)}<br><br><b>Terms & conditions</b><br>${esc(b.invoiceTerms)}</div>
       <p class="doc-foot">Computer-generated group invoice covering the tax invoices listed. Layout placeholder – replace with Chan Yew's GIV template (D-07).</p></div>`;
   }
+  html = referenceDocument(type, ids) ?? html;
   el.innerHTML = `<div class="print-bar"><button class="btn" id="bk">← Back</button><button class="btn primary" id="pr">🖨 Print / Save as PDF</button><span class="muted">Choose "Save as PDF" in the print dialog for a PDF copy.</span></div>${html || '<p>Document not found.</p>'}`;
   $('#bk', el).onclick = back; $('#pr', el).onclick = () => window.print();
 };
@@ -156,3 +157,4 @@ function renderTop() {
   renderTop();
   route();
 })();
+

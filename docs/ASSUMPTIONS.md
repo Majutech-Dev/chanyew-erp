@@ -20,6 +20,6 @@ Choices made where the requirements were silent. Each one can be changed. Tell u
 | W-14 | Leave counts Mon–Fri; public holidays are not deducted yet; annual leave entitlement per staff (default 14 days, 18 for senior) | No HR policy provided | R-6.2 |
 | W-15 | SGD consolidation uses fixed rates set by the Super Admin (MYR 0.29, THB 0.038) | Indicative group reporting only | R-1.3 |
 | W-16 | Glossary default prices are in SGD; for MY/TH the suggested price is converted with the set-up rate; the final price is always entered | Price list per branch not yet provided | R-3.3 |
-| W-17 | Printed SO / WO / IV / GIV use clean A4 placeholder layouts; PDF via the browser's "Save as PDF" | Client will supply templates (D-07) | R-5.5 |
+| W-17 | Printed SO / WO / IV follow Chan Yew's own forms (specimens of 4 Nov 2026); the group invoice uses the same style. Amounts show the branch currency sign ($, RM, ฿); tax lines are added when the branch charges tax, which the specimens do not show. PDF via the browser's "Save as PDF" | Specimens supplied by Chan Yew; GST shown because the system charges it | R-5.5 |
 | W-18 | Photos: JPG / PNG / WebP up to 5 MB, stored in `data/uploads` | Typical phone photos | R-4.2 |
 | W-19 | Look follows chan-yew.com: black on warm white, bronze accent #544300, EB Garamond wordmark, Open Sans Condensed headings (Google Fonts, system fallback offline); light by default, dark "espresso" variant on ◐. Blue = mandatory / green = calculated field colours are kept | Requested 30 Oct 2026: match the customer's website | – |

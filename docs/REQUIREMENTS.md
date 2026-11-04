@@ -62,3 +62,6 @@ Leave: Applied (Ops) → Approved / Rejected (Super Admin) · Cancelled
 ## 3. How this file is maintained
 - When a requirement changes, update section 1 and add a row to the README Update log that names the requirement.
 - Defaults go in ASSUMPTIONS.md; open questions go in DEFERRED.md until they are decided.
+
+## Print formats (4 Nov 2026)
+SO, WO and IV follow Chan Yew's own forms (specimens supplied 4 Nov 2026, kept outside the repository). **SO:** customer-particulars grid, numbered order details with amounts, total / paid / balance, item status, terms and conditions, company footer. **WO:** urgent / due date / RO / technician / artisan code / B2B ref grid, customer and sales-order box, a large order-details area (bilingual repair services and instructions are printed there), item status, footer. **IV:** customer grid, numbered work-order lines with location, RO and B2B ref, totals, footer, and a tear-off collection receipt (name, signature, date collected, number of items). The group invoice uses the same family. Tax, intake payments and payments received are shown when they apply. B2B ref = the sales order's customer reference; *Urgent* and *Artisan code* print blank until those fields are agreed (DEFERRED D-16).

@@ -28,6 +28,9 @@ Newest first. Every change request or reported issue gets a row. Status ✔ mean
 
 | # | Date | Request / issue | Cause | Change | Version | Status |
 |---|---|---|---|---|---|---|
+| 12 | 4 Nov 2026 | Printed IV, WO and SO should follow Chan Yew's own formats (specimen PDFs supplied 4 Nov 2026) | Printouts used generic placeholder layouts | SO, WO and IV rebuilt on Chan Yew's formats: logo from the specimens, customer-particulars grid, numbered order details (item type – #RO – item – services), totals with currency sign, item status box, SO terms and conditions, company footer, and the invoice's tear-off collection receipt. WO keeps the bilingual repair services and instructions in its order-details area. Group invoice printout moved to the same family. Singapore branch details (reg. no., address, website, SO terms) set from the specimens; new Website field in Set-up → Branches. Demo data reseeded locally | 0.7.0 | ✔ |
+| 11 | 2 Nov 2026 | Remove the password prompt on the UAT site | nginx basic-auth was added in front of the UAT site because the app has no sign-in | Basic-auth removed from nginx on the UAT server; DEPLOY-UAT.md records how to remove and re-add it, and that only demo data may be loaded | 0.6.0 | ✔ |
+| 10 | 2 Nov 2026 | Set up the UAT server on AWS | No deployment guide yet | `docs/DEPLOY-UAT.md`: EC2 (Singapore, 3.1.198.0), deploy key, systemd service, nginx with a site password, Let's Encrypt HTTPS, update and reset commands for chanyew.majutech.com.sg | 0.6.0 | ✔ |
 | 9 | 2 Nov 2026 | Pushed to GitHub (`main`, `uat`) | First push after the secret scan and review | Repository https://github.com/Majutech-Dev/chanyew-erp; `main` kept for the future live server, `uat` for the UAT server (chanyew.majutech.com.sg) | 0.6.0 | ✔ |
 | 8 | 2 Nov 2026 | Remove client meeting-note details from the docs before the first push | Pre-push review found a record count, location names and a document title from the confidential meeting notes | ASSUMPTIONS W-03, DEFERRED D-06 / D-13 and the REQUIREMENTS source line generalised; system names kept for the planned integrations | 0.6.0 | ✔ |
 | 7 | 2 Nov 2026 | Testing guide page for interim user testing (without development changes or TBC items), then push to GitHub | No guide for the client's testers | New **Test guide** page (top bar → Test guide, `#/guide`): 37 test cases in 9 areas, each with the user to test as, steps and expected result; testers mark Pass / Fail / Blocked with a comment (kept in their browser), export results to CSV, or print | 0.6.0 | ✔ |
@@ -48,10 +51,11 @@ Newest first. Every change request or reported issue gets a row. Status ✔ mean
 | `docs/TEST-RESULTS.md` | Test results, browser checks and known limits |
 | `docs/DEMO-WALKTHROUGH.md` | Demo script |
 | `docs/SCREEN-MAP.md` | Screens, navigation and who sees what |
+| `docs/DEPLOY-UAT.md` | UAT server set-up and update commands |
 
 ## Branches
 
-`main` is kept for the future live environment. `uat` deploys to the UAT server (subdomain to be confirmed).
+`main` is kept for the future live environment. `uat` deploys to the UAT server at https://chanyew.majutech.com.sg (see `docs/DEPLOY-UAT.md`).
 
 ## Files
 
@@ -62,8 +66,10 @@ server/seed.js       demo users and connected demo data; seed-cli.js = npm run s
 public/js/core.js    state, API, field builders, dialogs, routing, F4/F5/F6
 public/js/erp.js     generic ERP master–detail screen and child grid
 public/js/screens.js record screens (customers, SO, WO, invoices, staff, leave, set-up)
-public/js/app.js     dashboard, settings, printable SO / WO / IV / GIV
+public/js/app.js     dashboard, settings, print page
+public/js/print-templates.js  SO / WO / IV / GIV printouts in Chan Yew's own formats
 public/js/guide.js   test guide page for interim user testing (#/guide)
 data/                db.json, backups and uploads (created at run time, not in git)
 tests/               acceptance tests
 ```
+

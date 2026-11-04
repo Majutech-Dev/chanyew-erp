@@ -48,8 +48,11 @@
 ## Browser checks – v0.6.0 test guide (2 Nov 2026, 1280 × 800)
 - Test guide opens from the top bar; 37 cases render; marking W-03 as Fail with a comment colours the case and updates the summary, survives leaving and reopening the page; Clear my results resets it. Nav fits at 1280 px. No script errors.
 
+## Browser checks – v0.7.0 Chan Yew print formats (4 Nov 2026)
+- Compared side by side with the specimens: SO-SG-2026-0003 (4 items, GST, totals, item status, terms, footer), WO25000001 (grid incl. RO / technician / B2B ref, customer box, bilingual services, item status), IV-SG-2025-0001 (2 work-order lines, totals, tear-off collection receipt with item count) and GIV-SG-2026-0001. Malaysian invoice shows RM amounts; two work orders print as two pages. No script errors.
+
 ## Known limits
 - Demo mode only: no sign-in, no real WhatsApp / Xero / Sage connections (DEFERRED D-01…D-04).
-- Print layouts are placeholders until the client's templates arrive (D-07).
+- Malaysia and Thailand printouts use the Singapore format with placeholder company details until those are supplied (D-07).
 - Data is a single JSON file. That is fine for the demo, but a database is needed before migrating about 22k historic records (D-06).
 - Leave does not deduct public holidays (W-14).
