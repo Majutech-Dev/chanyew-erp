@@ -40,6 +40,16 @@ test('AT-02 B2B work orders carry the customer RO number; blank RO is numbered 0
   const b = run(db, SG, 'so.addLine', { soId: so.id, ...line() });
   assert.match(b.roNumber, /^\d{3}$/);
   assert.throws(() => run(db, SG, 'so.addLine', { soId: so.id, ...line({ roNumber: 'vva-9001' }) }), /already used/);
+  // an auto number never repeats one the customer already uses, however that number got there
+  const nc = run(db, SG, 'customer.save', { type: 'Business', name: 'Atelier Probe Pte Ltd', phone: '61110000',
+    email: 'probe@example.com', homeBranchId: 'SG', paymentTerm: '30 days', status: 'Active' });
+  const so2 = newSo(db, SG, 'Atelier Probe', 'SG');
+  const typed = run(db, SG, 'so.addLine', { soId: so2.id, ...line({ roNumber: '001' }) });
+  const auto = run(db, SG, 'so.addLine', { soId: so2.id, ...line() });
+  assert.equal(typed.roNumber, '001');
+  assert.equal(auto.roNumber, '002');                       // skips 001, which is already taken
+  const ros = db.workOrders.filter(w => w.customerId === nc.id).map(w => w.roNumber.toLowerCase());
+  assert.equal(new Set(ros).size, ros.length);              // one customer never has the same RO number twice
 });
 
 test('AT-03 Moving a work order to Technician requires a technician from the same branch', () => {
@@ -266,4 +276,91 @@ test('AT-17 Group invoice: groups unpaid invoices of one customer; its payment p
   run(db, SUPER, 'giv.void', { id: g2.id, reason: 'Wrong grouping' });
   assert.ok(j.every(i => i.givId === '' && i.status === 'Issued'));
   run(db, SG, 'invoice.pay', { id: j[0].id, amount: 1, date: today(), method: 'Cash' });
+});
+
+test('AT-18 Sage CRM exports (CSV and report HTML) import into Singapore and keep other branches', () => {
+  const fs = require('fs'), os = require('os'), path = require('path');
+  const { importSage, readFolder } = require('../tools/import-sage');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sage-'));
+  fs.writeFileSync(path.join(dir, 'Customers.csv'), '﻿Customer Name,Phone,Business E-mail\n,81000000,\nDemo Bags Pte Ltd,61234567,ops@example.com\nAlex Demo,91234567,\nAlex Demo,91234567,\n');
+  const row = c => `<tr>${c.map(x => `<td>${x}</td>`).join('')}</tr>`;
+  fs.writeFileSync(path.join(dir, 'so.xls'), `<html><table>${row(['Sale Order With WO (Audit)'])}${row(['Created Date', 'Sales Order No.', 'Customer Id', 'Work Order', 'Sale Order Item ID', 'Order Details', 'Amount', 'Brand', 'RO Number', 'Other B2B Number', 'Location Code', 'Product Code', 'Product Category', 'Sale Order ID', 'Collected Date'])}`
+    + row(['02/11/2026 10:51', 'SO00000001', 'Demo Bags Pte Ltd', 'WO00000001', 'SI1', 'Replace zip &amp; lining', '120.00', 'OTHERS', '9843', 'K1', 'MBS', 'Repair', 'HB', '1', '05/11/2026'])
+    + row(['02/11/2026 11:17', 'SO00000001', 'Demo Bags Pte Ltd', 'WO00000002', 'SI2', 'Custom wallet', '80.00', 'OTHERS', '9844', '', '', 'Bespoke', 'SLG', '1', ''])
+    + row(['03/11/2026 09:00', 'SO00000002', 'Alex Demo', 'WO00000003', 'SI3', 'Trim strap', '40.00', 'COACH', '', '', '', 'Repair', 'SLG', '2', '']) + '</table></html>');
+  fs.writeFileSync(path.join(dir, 'wo.csv'), 'Work Order ID,Created Date,Customer Name,Technician In Charge,Called Customer,Urgent,Due Date,Stage\n'
+    + 'WO00000001,02/11/2026 10:51,Demo Bags Pte Ltd,Tech Demo,Success,No,06/11/2026,Invoiced\n'
+    + 'WO00000002,02/11/2026 11:17,Demo Bags Pte Ltd,System Administrator,,Yes,10/11/2026,Checking\n'
+    + 'WO00000003,03/11/2026 09:00,Alex Demo,Tech Demo,,No,12/11/2026,Cancelled\n');
+  fs.writeFileSync(path.join(dir, 'inv.xls'), `<table>${row(['Created Date', 'Invoice No.', 'Total Amount', 'Total Amount After GST', 'Customer Id', 'Work Order No', 'RO Number', 'B2B Ref no', 'Description', 'Amount'])}`
+    + row(['05/11/2026 08:00', 'IN00000001', '120.00', '120.00', 'Demo Bags Pte Ltd', 'WO00000001', '9843', 'K1', 'Replace zip', '120.00']) + '</table>');
+  const { data, report } = readFolder(dir);
+  assert.deepEqual(report.map(r => r.kind), ['customers', 'invoiceLines', 'soItems', 'workOrders']);
+  const { db } = fresh();
+  const myBefore = db.workOrders.filter(w => w.branchId === 'MY').length;
+  const { summary, counts } = importSage(db, data);
+  assert.equal(db.workOrders.filter(w => w.branchId === 'MY').length, myBefore);            // other branch untouched
+  assert.equal(db.workOrders.filter(w => w.branchId === 'SG' && !w.legacy).length, 0);      // invented SG records replaced
+  assert.deepEqual([summary.customers, summary.salesOrders, summary.workOrders, summary.invoices], [2, 2, 3, 1]);
+  assert.equal(counts['customers without a name (skipped)'], 1);
+  assert.equal(counts['duplicate customer names in the list'], 1);
+  const wo = ref => db.workOrders.find(w => w.ref === ref);
+  assert.equal(wo('WO00000001').stage, 'Complete');
+  assert.equal(wo('WO00000001').description, 'Replace zip & lining');
+  assert.equal(wo('WO00000001').createdAt, '2026-11-02T02:51:00.000Z');
+  assert.equal(wo('WO00000002').productCode, 'Custom made');
+  assert.equal(wo('WO00000002').urgent, true);
+  assert.equal(wo('WO00000002').technicianId, '');                                           // admin user is not a technician
+  assert.equal(wo('WO00000003').stage, 'Cancelled');
+  assert.equal(wo('WO00000001').orderType, 'B2B');
+  const inv = db.invoices.find(i => i.ref === 'IN00000001');
+  assert.equal(inv.total, 120); assert.equal(inv.taxRate, 0); assert.equal(inv.status, 'Paid');
+  assert.equal(wo('WO00000001').invoiceId, inv.id);
+  assert.equal(db.salesOrders.find(s => s.ref === 'SO00000002').status, 'Completed');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('AT-19 Sage CRM import --from keeps recent and open work orders with their whole sales orders and invoices', () => {
+  const { importSage } = require('../tools/import-sage');
+  const so = (ref, wo, date, inv = '') => ({ soRef: ref, woRef: wo, customer: 'Alex Demo', created: date, amount: '50', invRef: inv });
+  const data = { customers: [{ customer: 'Alex Demo' }, { customer: 'Old Only Demo' }], invoiceLines: [], invoices: [],
+    soItems: [so('SO1', 'WO1', '01/02/2019', 'IN1'), so('SO2', 'WO2', '01/02/2019', 'IN1'), so('SO2', 'WO3', '05/10/2025'),
+      so('SO3', 'WO4', '01/03/2018'), so('SO4', 'WO5', '01/03/2017'), { ...so('SO5', 'WO6', '01/01/2016'), customer: 'Old Only Demo' }],
+    workOrders: [{ woRef: 'WO1', stage: 'Invoiced' }, { woRef: 'WO2', stage: 'Invoiced' }, { woRef: 'WO3', stage: 'Checking' },
+      { woRef: 'WO4', stage: 'Logged' }, { woRef: 'WO5', stage: 'Invoiced' }, { woRef: 'WO6', stage: 'Completed' }] };
+  const { db } = fresh();
+  const { summary, counts } = importSage(db, data, { from: '2025-10-01' });
+  const refs = db.workOrders.filter(w => w.branchId === 'SG').map(w => w.ref).sort();
+  assert.deepEqual(refs, ['WO1', 'WO2', 'WO3', 'WO4']);   // WO3 recent → SO2 (WO2) → IN1 (WO1); WO4 still open
+  assert.equal(counts['work orders left out by --from 2025-10-01'], 2);
+  assert.equal(summary.customers, 1);                       // customer with only old closed work orders left out
+});
+
+test('AT-20 Sage CRM invoices honour status and balance from the lines report; RO numbering continues past imported numbers', () => {
+  const { importSage } = require('../tools/import-sage');
+  const { db, SG } = fresh();
+  const item = (soRef, woRef, customer, amount) => ({ soRef, woRef, customer, amount, created: '02/11/2026' });
+  importSage(db, {
+    customers: [{ customer: 'Demo Bags Pte Ltd', type: 'Business' }, { customer: 'Alex Demo' }],
+    soItems: [{ ...item('SO1', 'WO1', 'Demo Bags Pte Ltd', '100'), ro: '0042' },
+      item('SO2', 'WO2', 'Alex Demo', '200'), item('SO3', 'WO3', 'Alex Demo', '300')],
+    workOrders: [{ woRef: 'WO1', stage: 'Invoiced' }, { woRef: 'WO2', stage: 'Invoiced' }, { woRef: 'WO3', stage: 'Invoiced' }],
+    // an invoice report repeats the invoice's own status and balance on every line
+    invoiceLines: [{ invRef: 'IN1', woRef: 'WO1', created: '05/11/2026', total: '100', status: 'Void', balance: '100' },
+      { invRef: 'IN2', woRef: 'WO2', created: '05/11/2026', total: '200', balance: '50' },
+      // a file with a Stage column: "Status" there is the work order's own, so it must not void the invoice
+      { invRef: 'IN3', woRef: 'WO3', created: '05/11/2026', total: '300', stage: 'Complete', status: 'Cancelled' }],
+    invoices: [] });
+  const inv = ref => db.invoices.find(i => i.ref === ref);
+  assert.equal(inv('IN1').status, 'Void');
+  assert.equal(inv('IN1').payments.length, 0);
+  assert.equal(db.workOrders.find(w => w.ref === 'WO1').invoiceId, '');   // a voided invoice does not lock its work order
+  assert.equal(inv('IN2').status, 'Partially paid');
+  assert.equal(inv('IN2').payments[0].amount, 150);                       // 200 due, 50 still outstanding in Sage
+  assert.equal(inv('IN3').status, 'Paid');                                // settled outside the system, not voided
+
+  const c = db.customers.find(x => x.name === 'Demo Bags Pte Ltd');
+  assert.equal(c.roSeq, 42);                                              // continues from the imported RO 0042
+  const so = run(db, SG, 'so.save', { branchId: 'SG', customerId: c.id, date: today() });
+  assert.equal(run(db, SG, 'so.addLine', { soId: so.id, ...line() }).roNumber, '043');
 });

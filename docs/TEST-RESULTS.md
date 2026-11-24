@@ -20,8 +20,11 @@
 | AT-15 | HTTP: 401 without user, scoped state, no path traversal | ✔ |
 | AT-17 | Group invoice over unpaid IVs of one customer; payment applied earliest due first and updates the IVs; grouped IVs not paid alone; void (Super Admin, no payments) releases them | ✔ |
 | AT-16 | Bulk set stage: ticked WOs move together; skip those already there; one closed WO blocks the batch; reason for Cancelled; other branch refused | ✔ |
+| AT-18 | Sage CRM exports (CSV and report HTML) import into Singapore; other branches untouched; invented SG records replaced; admin users not taken as technicians; stages, bespoke product code and urgent mapped | ✔ |
+| AT-19 | Sage CRM `--from` keeps recent and still-open WOs together with the whole SOs and invoices around them; customers with only old closed WOs left out | ✔ |
+| AT-20 | Sage CRM invoice Status and Balance read from the lines report (void takes no payment and does not lock its WOs; a balance becomes a part payment); a *Status* beside a *Stage* column is ignored; RO numbering continues past the imported numbers | ✔ |
 
-17 / 17 passed (2 Nov 2026).
+20 / 20 passed (24 Nov 2026, Node 24.16.0). AT-02 also covers an automatic RO number skipping one the customer already uses.
 
 ## Browser checks (30 Oct 2026, 1280 × 800, built-in browser)
 - **Grace Lim (Super Admin):** dashboard; WO search with status segment and filters; opened WO26000028; Edit (F5) → changed location → Save → History entry; ▶ QC stage move; staff → leave tab with approve/reject; invoice GIV print with zero-value line; bilingual WO print; light theme.
@@ -51,8 +54,16 @@
 ## Browser checks – v0.7.0 Chan Yew print formats (4 Nov 2026)
 - Compared side by side with the specimens: SO-SG-2026-0003 (4 items, GST, totals, item status, terms, footer), WO25000001 (grid incl. RO / technician / B2B ref, customer box, bilingual services, item status), IV-SG-2025-0001 (2 work-order lines, totals, tear-off collection receipt with item count) and GIV-SG-2026-0001. Malaysian invoice shows RM amounts; two work orders print as two pages. No script errors.
 
+## Browser checks – v0.8.1 Sage CRM import (24 Nov 2026, 1024 × 768)
+- Loaded the demo data, then ran `tools/import-sage.js` over an **invented** Sage CRM export (4 customers, 4 sales orders, 5 work orders, 1 invoice; `@example.com`). The command recognised all four files by their columns and reported the one admin user taken as a technician and the one unknown stage ("Awaiting Parts" → Logged in).
+- Work Orders search as Super Admin: the imported Singapore work orders appear with their legacy `WO########` numbers and mapped stages, beside the untouched Kuala Lumpur and Bangkok demo records (16 of them).
+- IN00007001 opened from Invoices: SGD 299.75 over 2 work orders, balance 0.00 — GST 9 % read back from Sage's after-GST total, the 50.00 taken at intake deducted, status Paid.
+- SO00004101 opened: created by "Import (Sage CRM)", customer ref OLB-7781 from the B2B number, read-only until F5. **+ Add item** with the RO left blank produced **RO 044**, continuing past the imported 0042 and 0043 instead of restarting at 001 (the v0.8.1 fix). The test item was removed by re-running the import, which replaces the Singapore records.
+- No script errors in the console.
+
 ## Known limits
 - Demo mode only: no sign-in, no real WhatsApp / Xero / Sage connections (DEFERRED D-01…D-04).
+- The Sage CRM import has not been run on the client's real exports – they have not arrived (D-06). How much history to load is open (D-17).
 - Malaysia and Thailand printouts use the Singapore format with placeholder company details until those are supplied (D-07).
 - Data is a single JSON file. That is fine for the demo, but a database is needed before migrating about 22k historic records (D-06).
 - Leave does not deduct public holidays (W-14).

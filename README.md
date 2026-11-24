@@ -28,6 +28,8 @@ Newest first. Every change request or reported issue gets a row. Status ✔ mean
 
 | # | Date | Request / issue | Cause | Change | Version | Status |
 |---|---|---|---|---|---|---|
+| 16 | 24 Nov 2026 | Found while verifying the Sage import: a work order could be given an RO number the same customer already uses | `so.addLine` numbers a blank B2B RO from the customer's `roSeq`, but the duplicate check only ever saw an RO number that was typed in, so an auto number silently repeated an existing one. Reachable with hand-typed numbers and certain after a data import, which brings in RO numbers while `roSeq` stays at 0 | Auto numbering now skips every RO number the customer already uses, so one customer never has the same RO twice (`server/workflow.js`); the Sage import sets each customer's `roSeq` past the highest imported number. Covers the Access (KL) import too. R-4.1 amended, AT-02 extended | 0.8.1 | ✔ |
+| 15 | 24 Nov 2026 | Migrate Chan Yew Singapore's Sage CRM data to UAT for testing | Singapore's records are in Sage CRM, which has no export for work orders and invoices; no import for it yet | New `tools/import-sage.js`: reads Sage CRM exports (CSV, or the HTML table a report saves as .xls), recognises each file by its columns, maps customers, sales orders, work orders (stages, technicians, urgent, RO / B2B refs) and invoices into Singapore, keeps the other branches, `--from` for a recent period, `--check` to report only. Mapping and open questions in `docs/SAGE-CRM-MIGRATION.md`. An invoice's **Status and Balance are now also read from the invoice-with-work-orders report**, which repeats them on every line – without that a voided or part-paid invoice in that report was imported as paid in full (W-20). AT-18, AT-19, AT-20. Checked end to end on an invented export (4 customers, 4 SOs, 5 WOs, 1 invoice): file recognition, GST read back from the after-GST total, admin users and unknown stages reported, other branches untouched. **Still to do:** run it on the client's real exports, which have not arrived, and settle Q-5 / D-17 (the full history since 2016 does not fit the current JSON storage) | 0.8.0 | In progress |
 | 14 | 4 Nov 2026 | UAT should show only the imported client data, not the invented demo records | The import kept the invented Singapore and Bangkok demo data | `tools/import-access.js` now keeps only the set-up (demo users, branches, glossary, settings) plus the imported records; `--keep-demo` keeps the other branches' invented data. Banner no longer says the data is invented. `docs/DEPLOY-UAT.md` section 11 shows how to load client data on UAT without git | 0.7.2 | ✔ |
 | 13 | 4 Nov 2026 | Load the client's existing (Access) data from 1 Oct 2025 as demo data | Demo used invented records only | `tools/access-export.ps1` exports the legacy Access CRM (read-only) and `tools/import-access.js` loads it into the **local** data: Kuala Lumpur branch from 1 Oct 2025 (250 customers, 1,682 sales orders, 4,489 work orders, 1,242 invoices, 18 technicians), replacing the invented KL demo records. Access has no payment records, so imported invoices are recorded as settled outside the system. Real client data – local only, not in git, not on UAT | 0.7.1 | ✔ |
 | 12 | 4 Nov 2026 | Printed IV, WO and SO should follow Chan Yew's own formats (specimen PDFs supplied 4 Nov 2026) | Printouts used generic placeholder layouts | SO, WO and IV rebuilt on Chan Yew's formats: logo from the specimens, customer-particulars grid, numbered order details (item type – #RO – item – services), totals with currency sign, item status box, SO terms and conditions, company footer, and the invoice's tear-off collection receipt. WO keeps the bilingual repair services and instructions in its order-details area. Group invoice printout moved to the same family. Singapore branch details (reg. no., address, website, SO terms) set from the specimens; new Website field in Set-up → Branches. Demo data reseeded locally | 0.7.0 | ✔ |
@@ -54,6 +56,7 @@ Newest first. Every change request or reported issue gets a row. Status ✔ mean
 | `docs/DEMO-WALKTHROUGH.md` | Demo script |
 | `docs/SCREEN-MAP.md` | Screens, navigation and who sees what |
 | `docs/DEPLOY-UAT.md` | UAT server set-up and update commands |
+| `docs/SAGE-CRM-MIGRATION.md` | Singapore Sage CRM data: what to export, field mapping, open questions |
 
 ## Branches
 
@@ -71,7 +74,7 @@ public/js/screens.js record screens (customers, SO, WO, invoices, staff, leave, 
 public/js/app.js     dashboard, settings, print page
 public/js/print-templates.js  SO / WO / IV / GIV printouts in Chan Yew's own formats
 public/js/guide.js   test guide page for interim user testing (#/guide)
-tools/               access-export.ps1 + import-access.js: load the legacy Access CRM into local data
+tools/               access-export.ps1 + import-access.js: load the legacy Access CRM (KL); import-sage.js: load Sage CRM exports (SG)
 data/                db.json, backups and uploads (created at run time, not in git)
 tests/               acceptance tests
 ```

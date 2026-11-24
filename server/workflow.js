@@ -243,7 +243,12 @@ const actions = {
     if (so.status === 'Cancelled') fail('Items cannot be added to a cancelled sales order.');
     const cust = find(db.customers, so.customerId, 'Customer');
     const w = cleanWoFields(db, p, so, null);
-    if (cust.type === 'Business' && !w.roNumber) { cust.roSeq = (cust.roSeq || 0) + 1; w.roNumber = pad(cust.roSeq, 3); }
+    // A blank RO on a B2B item is numbered 001 onwards, skipping any number the customer already uses (typed in by hand
+    // or brought in by a data import), because the duplicate check above only sees an RO number that was supplied.
+    if (cust.type === 'Business' && !w.roNumber) {
+      const used = new Set(db.workOrders.filter(x => x.customerId === so.customerId).map(x => String(x.roNumber || '').toLowerCase()));
+      do { cust.roSeq = (cust.roSeq || 0) + 1; w.roNumber = pad(cust.roSeq, 3); } while (used.has(w.roNumber.toLowerCase()));
+    }
     const yy = so.date.slice(2, 4);
     const wo = { id: newId(db, 'WO'), ref: `WO${yy}${pad(nextSeq(db, `wo-${yy}`), 6)}`, soId: so.id, branchId: so.branchId,
       customerId: so.customerId, orderType: cust.type === 'Business' ? 'B2B' : 'B2C', ...w, stage: 'Logged in',

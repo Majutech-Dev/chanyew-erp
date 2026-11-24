@@ -20,7 +20,7 @@ Sources: `Requirements.docx` (30 Oct 2026, primary). Other client documents (mee
 - R-3.4 Cancelling an SO closes its open items as zero-value "return as requested" work orders. – AT-13
 
 ### R-4 Work orders
-- R-4.1 WO number is system generated (`WO` + 8 digits). B2B WOs carry the customer's RO/docket number, numbered `001` onwards when the customer has none; RO numbers are unique per customer. – AT-01, AT-02
+- R-4.1 WO number is system generated (`WO` + 8 digits). B2B WOs carry the customer's RO/docket number, numbered `001` onwards when the customer has none; RO numbers are unique per customer, and an automatic number skips any the customer already uses (typed in by hand or brought in by a data import). – AT-01, AT-02
 - R-4.2 Fields: type B2B/B2C, product code (Custom made / Repair / Cleaning-colouring), item type (HB, Jewellery, RTW, Shoes, SLG, Trolley, Watch strap), brand, condition, location, estimated date, price, amount paid, outstanding, technician, photos.
 - R-4.3 Stages: Logged in, Checking, Order SP, Technician, QC, Pending collection, Call customer, Call unreachable, Call success, Complete, plus Cancelled (zero value). Several work orders can be moved to one stage together (ticked in Search; added 2 Nov 2026). – AT-03, AT-16
 - R-4.4 Moving to Technician requires choosing a technician of that branch. – AT-03
