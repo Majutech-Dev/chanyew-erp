@@ -1,4 +1,4 @@
-# UAT deployment – chanyew.majutech.com.sg
+# UAT deployment – chanyewleather.majutech.com.sg
 
 How to run the `uat` branch on the AWS EC2 server (Ubuntu 24.04, Singapore) behind nginx with HTTPS. `main` is kept for a future live environment.
 
@@ -9,7 +9,7 @@ How to run the `uat` branch on the AWS EC2 server (Ubuntu 24.04, Singapore) behi
 | App | `/opt/chanyew-erp`, runs as Linux user `chanyew`, service `chanyew-erp`, port 3120 (internal only) |
 | Data | `/var/lib/chanyew-erp` (db.json, backups, uploaded photos) – outside the code folder |
 
-> **The app has no sign-in (local demo mode, see DEFERRED D-01).** Anyone who reaches it can pick any user, including Super Admin, and change the data. Step 7 puts a password in front of the whole site. Keep it for all of UAT, and do not load real customer data until real sign-in is built.
+> **The app has no sign-in (local demo mode, see DEFERRED D-01).** Anyone who reaches it can pick any user, including Super Admin, and change the data. The step 7 site password is the only control in front of UAT, so keep it on for the whole of UAT. Real customer data may be loaded only while it is on (section 11), and only with the client's agreement.
 
 ## 1. Server and firewall (AWS console) – done
 
@@ -18,11 +18,13 @@ How to run the `uat` branch on the AWS EC2 server (Ubuntu 24.04, Singapore) behi
 
 ## 2. DNS
 
-`chanyew.majutech.com.sg` must have **one** A record: `3.1.198.0`. Remove any other A record for `chanyew` (on 2 Nov 2026 an old record `157.245.194.93` pointed at a different app). Check before step 8 – only `3.1.198.0` should come back:
+The UAT site is **`chanyewleather.majutech.com.sg`**, with one A record pointing at `3.1.198.0`. Checked 25 Nov 2026:
 
 ```bash
-nslookup chanyew.majutech.com.sg 8.8.8.8
+nslookup chanyewleather.majutech.com.sg 8.8.8.8
 ```
+
+> **`chanyew.majutech.com.sg` is not the UAT address.** It was the name used when the server was set up on 2 Nov 2026, but it still resolves to the old `157.245.194.93` record (a different app) and does not answer. Checked 25 Nov 2026. Repoint it at `3.1.198.0` or remove it; until it resolves to this server, do not put it in a certificate, a tester invitation or step 8.
 
 ## 3. Connect and install software
 
@@ -99,7 +101,7 @@ sudo htpasswd -c /etc/nginx/.chanyew-htpasswd uat
 sudo tee /etc/nginx/sites-available/chanyew-erp > /dev/null <<'EOF'
 server {
     listen 80;
-    server_name chanyew.majutech.com.sg;
+    server_name chanyewleather.majutech.com.sg;
     client_max_body_size 10m;            # photos up to 5 MB are sent base64-encoded
 
     auth_basic "Chan Yew ERP UAT";
@@ -116,7 +118,15 @@ EOF
 sudo ln -sf /etc/nginx/sites-available/chanyew-erp /etc/nginx/sites-enabled/ && sudo rm -f /etc/nginx/sites-enabled/default && sudo nginx -t && sudo systemctl reload nginx
 ```
 
-**Site password removed on request (2 Nov 2026).** The UAT site is open without the password prompt, so anyone with the address can use it as any demo user. Only demo data may be loaded. To remove it:
+**The site password is on.** Checked 25 Nov 2026: the site answers `401 Unauthorized` with `WWW-Authenticate: Basic realm="Chan Yew ERP UAT"`, the realm set above. It was removed on request on 2 Nov 2026 (README log row 11) and has since been put back – when, and by whom, is not recorded. Keep it on while the app has no sign-in, and never remove it while real customer data is loaded (section 11).
+
+Check it from your PC at any time:
+
+```bash
+curl -sS -I https://chanyewleather.majutech.com.sg | head -3
+```
+
+To remove it – only on a site holding invented demo data:
 
 ```bash
 sudo sed -i '/auth_basic/d' /etc/nginx/sites-available/chanyew-erp && sudo nginx -t && sudo systemctl reload nginx
@@ -126,13 +136,13 @@ To put it back, add the two `auth_basic` lines inside the `server { … }` block
 
 ## 8. HTTPS (Let's Encrypt, renews automatically)
 
-Only after step 2 shows a single record:
+Only once step 2 shows this server's address for the name you are certifying:
 
 ```bash
-sudo certbot --nginx -d chanyew.majutech.com.sg --redirect --agree-tos -m <admin email> --no-eff-email
+sudo certbot --nginx -d chanyewleather.majutech.com.sg --redirect --agree-tos -m <admin email> --no-eff-email
 ```
 
-The site is then at https://chanyew.majutech.com.sg and asks for the step 7 login. Testers start with **Test guide** in the top bar.
+The site is then at https://chanyewleather.majutech.com.sg and asks for the step 7 login. Testers start with **Test guide** in the top bar.
 
 ## 9. Updating after a push to `uat`
 
@@ -149,7 +159,7 @@ sudo -u chanyew git -C /opt/chanyew-erp pull --ff-only && sudo systemctl restart
 sudo systemctl stop chanyew-erp && sudo -u chanyew bash -c 'cd /opt/chanyew-erp && npm run seed' && sudo systemctl start chanyew-erp
 ```
 
-## 11. Load the client's data (Access export)
+## 11. Load the client's data (Access or Sage CRM export)
 
 The export file holds real customer data: copy it straight to the server, **never through git**, and keep the site password on (step 7).
 
@@ -166,4 +176,28 @@ sudo -u chanyew git -C /opt/chanyew-erp pull --ff-only && sudo chmod 644 /tmp/kl
 ```
 
 Add `--keep-demo` after `MY` to keep the invented Singapore and Bangkok demo records.
+
+### Singapore (Sage CRM)
+
+The Sage CRM export is a **folder** of files, not a single file – see `docs/SAGE-CRM-MIGRATION.md` for what to export and how it is mapped.
+
+```bash
+scp -i "$env:USERPROFILE\.ssh\CYL-UAT.pem" -r "<path>\sage-export" ubuntu@3.1.198.0:/tmp/sage
+```
+
+On the server, `--check` first and read everything it reports it had to guess (unknown stages, admin users taken as technicians, duplicate customer names, totals that differ) against Sage before loading:
+
+```bash
+sudo chmod -R a+rX /tmp/sage && sudo -u chanyew node /opt/chanyew-erp/tools/import-sage.js /tmp/sage --check
+```
+
+Then load, replacing only Singapore and backing up `db.json` first:
+
+```bash
+sudo systemctl stop chanyew-erp && sudo -u chanyew node /opt/chanyew-erp/tools/import-sage.js /tmp/sage --from 2025-10-01 && sudo systemctl start chanyew-erp && sudo rm -rf /tmp/sage
+```
+
+`--from` loads a recent period plus every work order still open; the full history since 2016 does not fit the current JSON storage (DEFERRED **D-17**, measured in `docs/SAGE-CRM-MIGRATION.md` section 5).
+
+**Order matters if both branches are loaded.** The Access import above replaces *all* data with the branch it imports, while the Sage import replaces only Singapore. Load Access (KL) first, then Sage (SG); the other way round leaves no Singapore data.
 
